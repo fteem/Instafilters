@@ -11,17 +11,42 @@ import CoreImage
 
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
+    @IBOutlet weak var saveBtn: UIButton!
+    @IBOutlet weak var intensityLbl: UILabel!
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var intensity: UISlider!
+    @IBOutlet weak var changeFilterBtn: UIButton!
     
-    var currentImage: UIImage!
+    var currentImage: UIImage! {
+        didSet {
+            intensity.isEnabled = true
+            intensityLbl.textColor = btnColor
+            
+            changeFilterBtn.isEnabled = true
+            changeFilterBtn.setTitleColor(btnColor, for: .normal)
+            
+            saveBtn.isEnabled = true
+            saveBtn.setTitleColor(btnColor, for: .normal)
+        }
+    }
     var context: CIContext!
     var currentFilter: CIFilter!
+    
+    let btnColor = UIColor(hue: 0.5861, saturation: 1, brightness: 1, alpha: 1.0)
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        title = "Instafilter"
+        intensity.isEnabled = false
+        intensityLbl.textColor = UIColor.lightGray
+
+        changeFilterBtn.isEnabled = false
+        changeFilterBtn.setTitleColor(UIColor.lightGray, for: .normal)
+        
+        saveBtn.isEnabled = false
+        saveBtn.setTitleColor(UIColor.lightGray, for: .normal)
+        
+        title = "Instafilters"
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .add,
             target: self,
@@ -88,7 +113,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     @IBAction func save(_ sender: UIButton) {
-        UIImageWriteToSavedPhotosAlbum(imageView.image!, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
+        if let image = imageView.image {
+            UIImageWriteToSavedPhotosAlbum(image, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
+        }
+        
     }
     
     @IBAction func changeFilter(_ sender: UIButton) {
@@ -108,7 +136,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         // make sure we have a valid image before continuing!
         guard currentImage != nil else { return }
         
-        currentFilter = CIFilter(name: action.title!)
+        
+        let filterName = action.title!
+        changeFilterBtn.setTitle(filterName, for: .normal)
+        currentFilter = CIFilter(name: filterName)
         
         let beginImage = CIImage(image: currentImage)
         currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
